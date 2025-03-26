@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+.DS_Store
+.env
+*.wav
+*.mp3
+data/raw/

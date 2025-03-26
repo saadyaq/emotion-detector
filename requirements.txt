@@ -1,0 +1,7 @@
+librosa
+pandas
+numpy
+torch
+scikit-learn
+matplotlib
+streamlit
