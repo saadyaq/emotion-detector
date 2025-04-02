@@ -2,6 +2,7 @@ librosa
 pandas
 numpy
 torch
+tqdm
 scikit-learn
 matplotlib
 streamlit
