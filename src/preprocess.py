@@ -78,8 +78,7 @@ def standardize(X):
     """
     from sklearn.preprocessing import StandardScaler
     scaler=StandardScaler()
-    scaler.fit(X)
-    X_scaled=scaler.transform(X)
+    X_scaled=scaler.fit_transform(X)
     return X_scaled
 
 
@@ -92,10 +91,26 @@ def reduce_pca(X,n_components):
     Returns:
     ndarray: Reduced feature matrix.
     """
-    from sklearn.preprocessing import PCA
+    from sklearn.decomposition import PCA
 
     pca=PCA(n_components=n_components)
-    pca.fit_fit(X)
-    X_pca=pca.transform(X)
+    X_pca=pca.fit_transform(X)
     return X_pca
 
+__all__ = [
+    "load_audio",
+    "plot_waveform",
+    "plot_spectogram",
+    "standardize",
+    "reduce_pca"
+]
+
+if __name__ == "__main__":
+    import os
+    test_path = "../data/raw/Audio_Speech_Actors_01-24/Actor_01/03-01-01-01-01-01-01.wav"
+    
+    if os.path.exists(test_path):
+        y, sr = load_audio(test_path)
+        if y is not None:
+            plot_waveform(y, sr)
+            plot_spectogram(y, sr)
