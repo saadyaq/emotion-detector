@@ -79,7 +79,7 @@ def standardize(X):
     from sklearn.preprocessing import StandardScaler
     scaler=StandardScaler()
     X_scaled=scaler.fit_transform(X)
-    return X_scaled
+    return X_scaled,scaler
 
 
 def reduce_pca(X,n_components):
@@ -95,7 +95,7 @@ def reduce_pca(X,n_components):
 
     pca=PCA(n_components=n_components)
     X_pca=pca.fit_transform(X)
-    return X_pca
+    return X_pca,pca
 
 __all__ = [
     "load_audio",
@@ -106,11 +106,17 @@ __all__ = [
 ]
 
 if __name__ == "__main__":
+    print("Bloc main lancé")
+
     import os
-    test_path = "../data/raw/Audio_Speech_Actors_01-24/Actor_01/03-01-01-01-01-01-01.wav"
+    test_path = "/home/saadyaq/SE/Python/emotion_detector/data/raw/SPEECH_RECOGNITION/Actor_01/03-01-01-01-01-01-01.wav"
     
     if os.path.exists(test_path):
         y, sr = load_audio(test_path)
+        print("Audio chargé")
         if y is not None:
             plot_waveform(y, sr)
             plot_spectogram(y, sr)
+            print("Code bien executé")
+        else:
+            print("Failed to load audio.")
