@@ -1,25 +1,63 @@
-# 🎤 Emotion Detector (Multilingual)
+# 🎙️ Emotion Detector
 
-This project detects emotions in multilingual speech using audio signal processing, `librosa`, and machine learning.
+This project aims to build a **Speech Emotion Recognition** (SER) system that can detect human emotions from vocal signals using both **classical ML** (Random Forest, MLP) and **deep learning** (CNN on spectrograms). We built an end-to-end pipeline, from raw audio to a real-time Streamlit application.
 
-## 🔍 Features
-- Raw `.wav` audio exploration
-- Waveform and Mel spectrogram visualization
-- MFCC and feature extraction with `librosa`
-- Ready for model training and Streamlit app
+---
 
-## 📁 Structure
-emotion_detector/ │ ├── data/ # Raw and processed data │ ├── raw/ # RAVDESS dataset │ ├── metadata.csv # Paths + emotion labels │ ├── X.npy / y.npy # Features and targets (classical) │ └── X_spectro.npy # Image-based features │ ├── models/ # Saved models (e.g. Random Forest) │ └── rf.joblib │ ├── src/ # Python modules │ ├── feature_extraction.py │ ├── preprocess.py │ ├── audio_to_image.py │ └── train.py │ ├── notebooks/ # Jupyter notebooks │ ├── exploration.ipynb │ ├── build_dataset.ipynb │ └── indexation.ipynb │ ├── app.py # Streamlit app for real-time prediction ├── requirements.txt # Python dependencies └── README.md # Project description
+## 📁 Project Structure
+
+```
+emotion_detector/
+├── data/                      # Raw and processed data
+│   ├── raw/                  # RAVDESS dataset
+│   ├── metadata.csv          # Paths + emotion labels
+│   ├── X.npy / y.npy         # Features and targets (classical)
+│   └── X_spectro.npy         # Image-based features
+├── models/                   # Saved models (e.g. Random Forest)
+│   └── rf.joblib
+├── src/                      # Python modules
+│   ├── feature_extraction.py
+│   ├── preprocess.py
+│   ├── audio_to_image.py
+│   ├── train.py
+│   └── predict.py
+├── notebooks/                # Jupyter notebooks
+│   ├── exploration.ipynb
+│   ├── build_dataset.ipynb
+│   └── indexation.ipynb
+├── app.py                    # Streamlit app for real-time prediction
+├── requirements.txt          # Python dependencies
+└── README.md                 # Project description
+```
+
+---
+
 ## 🚀 To Run
+
+Install dependencies:
+
 ```bash
-pip install -r requirements.txt## 🔧 What We've Built
+pip install -r requirements.txt
+```
 
-### 🗂️ 1. Dataset Preparation
+Then launch the Streamlit app:
+
+```bash
+streamlit run app.py
+```
+
+---
+
+## 📊 What We've Built
+
+### 🧩 1. Dataset Preparation
+
 - Used the **RAVDESS dataset** (Ryerson Audio-Visual Database of Emotional Speech and Song).
-- Created a structured `metadata.csv` with file paths and corresponding emotion labels.
+- Created a structured `metadata.csv` file with paths and corresponding emotion labels.
 
-### 🎧 2. Audio Feature Extraction
-From each `.wav` file, we extracted features using `librosa`:
+### 🎵 2. Audio Feature Extraction
+
+From `.wav` files, we extracted features using `librosa`:
 - **MFCCs**
 - **Chroma STFT**
 - **Spectral Centroid**
@@ -27,85 +65,56 @@ From each `.wav` file, we extracted features using `librosa`:
 - **Spectral Contrast**
 - **Tempo**
 
-These were used as inputs to classical machine learning models.
+This produced a numerical dataset saved as `X.npy` / `y.npy`.
 
-### 🧠 3. Model Training
-We trained and evaluated multiple models:
-- ✅ **Random Forest** (best performance: ~44% accuracy)
-- MLP (Multi-layer Perceptron)
-- Logistic Regression
-- CNN with spectrograms (TensorFlow)
-- PyTorch (experimental)
+### 🧠 3. Machine Learning Models
 
-The **Random Forest** achieved the best balance of simplicity and performance.
+We trained various classifiers:
+- **Logistic Regression**
+- **MLP Classifier**
+- **Random Forest (best result ≈ 44%)**
 
-### 📷 4. Spectrogram Approach (CNN)
-- Converted audio signals to **Mel spectrograms**.
-- Normalized and padded them to fixed shapes.
-- Built a CNN in TensorFlow/Keras.
-- While results were below the RF model, this approach has strong potential.
+We standardized and optionally applied PCA to reduce dimensions.
 
-### 🌐 5. Real-Time Web App (Streamlit)
-Built a live Streamlit interface:
-- 🎙️ Records audio using the microphone.
-- 🎛️ Extracts features in real-time.
-- 🤖 Uses the pre-trained Random Forest to predict emotion.
-- 📈 Displays prediction on the interface.
+### 🖼️ 4. CNN with Spectrograms
 
----
+We created mel-spectrogram images for each `.wav` using `librosa`:
+- Normalized and padded to fixed size (128x143x1)
+- Saved as numpy array `X_spectro.npy`
 
-### 🧪 How to Run
+Then trained a CNN with TensorFlow/Keras:
+- 3 convolutional layers
+- BatchNorm, Dropout
+- Accuracy ~ 28%
 
-```bash
-# Create & activate a virtual environment
-python -m venv venv
-source venv/bin/activate  # or .\venv\Scripts\activate on Windows
+### 🌐 5. Streamlit App
 
-# Install dependencies
-pip install -r requirements.txt
+- Record from microphone
+- Extract features
+- Load trained model
+- Predict & display emotion
 
-# Run the app
-streamlit run app.py
-
----
----
-
-### 📈 Known Challenges
-
-- 📉 Dataset is relatively small (~1440 samples after cleaning)
-- ⚖️ Imbalance between emotion classes (e.g., fewer neutral samples)
-- 🎭 Emotions in voice are subtle and subjective
-- 🧠 CNNs require more data or pre-training for generalization
+> Note: works only on native OS (not WSL) for microphone.
 
 ---
 
-### 🚀 Future Work
+## 📌 Improvements Planned
 
-- 🔁 Improve CNN with deeper layers and **data augmentation**
-- 📚 Use **pre-trained models** (e.g., wav2vec, YAMNet)
-- ⏱️ Try **temporal models** like RNNs or LSTMs for sequential patterns
-- 🌍 Add **language detection** & multi-lingual emotion recognition
-- ☁️ Deploy Streamlit app using **Streamlit Cloud**, **Heroku**, or **EC2**
-- 🎛️ Enhance audio interface (visual feedback, gain control)
-- 👥 Combine with **facial emotion recognition** for multi-modal analysis
+- Improve CNN architecture (attention, deeper layers, transfer learning)
+- Use data augmentation
+- Try other audio features (e.g., pitch, energy)
+- Deploy the app online (e.g., Streamlit Cloud or Hugging Face Spaces)
 
 ---
 
-### 🤝 Credits
+## 📚 References
 
-This project was developed by **Saad Yaqine** as part of a personal learning initiative to explore voice signal processing, ML pipelines, and real-time applications.
-
-📬 Contact: saadyaqine91@gmail.com  
-📌 Tools used: Python, Librosa, Scikit-learn, TensorFlow/Keras, Streamlit
+- RAVDESS dataset: https://zenodo.org/record/1188976
+- Librosa documentation: https://librosa.org
+- TensorFlow, Scikit-learn, Streamlit
 
 ---
 
-### 🔗 References
+## ✨ Author
 
-- 🎧 [RAVDESS dataset](https://zenodo.org/record/1188976)
-- 📖 [Librosa documentation](https://librosa.org/doc/latest/index.html)
-- 🌐 [Streamlit](https://streamlit.io)
-- ⚙️ Scikit-learn, TensorFlow, PyTorch
-
-
-
+**Saad Yaqine**
