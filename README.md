@@ -54,7 +54,7 @@ Built a live Streamlit interface:
 
 ---
 
-## 🧪 How to Run
+### 🧪 How to Run
 
 ```bash
 # Create & activate a virtual environment
@@ -68,40 +68,44 @@ pip install -r requirements.txt
 streamlit run app.py
 
 ---
-## 📈 Known Challenges
+---
 
-- Dataset is small (~1400 files)
-- Emotion categories are unbalanced (e.g., fewer neutral samples)
-- Emotion in speech is subtle and subjective
-- CNNs require larger data or transfer learning
+### 📈 Known Challenges
+
+- 📉 Dataset is relatively small (~1440 samples after cleaning)
+- ⚖️ Imbalance between emotion classes (e.g., fewer neutral samples)
+- 🎭 Emotions in voice are subtle and subjective
+- 🧠 CNNs require more data or pre-training for generalization
 
 ---
 
-## 🚀 Future Work
+### 🚀 Future Work
 
-- Improve CNN with deeper architecture & data augmentation
-- Use **pre-trained models** (YAMNet, wav2vec, etc.)
-- Try **RNNs / LSTMs** for temporal modeling
-- Multi-modal fusion (e.g., facial + vocal emotion)
-- Deploy Streamlit on the cloud (e.g., Streamlit Cloud / Heroku / EC2)
-- Add **language detection** and **multi-language emotion support**
-
----
-
-## 🤝 Credits
-
-This project was developed by **Saad Yaqine** as part of a personal initiative to combine signal processing, machine learning, and real-time applications.
-
-📬 saadyaqine91@gmail.com
+- 🔁 Improve CNN with deeper layers and **data augmentation**
+- 📚 Use **pre-trained models** (e.g., wav2vec, YAMNet)
+- ⏱️ Try **temporal models** like RNNs or LSTMs for sequential patterns
+- 🌍 Add **language detection** & multi-lingual emotion recognition
+- ☁️ Deploy Streamlit app using **Streamlit Cloud**, **Heroku**, or **EC2**
+- 🎛️ Enhance audio interface (visual feedback, gain control)
+- 👥 Combine with **facial emotion recognition** for multi-modal analysis
 
 ---
 
-## 🔗 References
+### 🤝 Credits
 
-- [RAVDESS dataset](https://zenodo.org/record/1188976)
-- [Librosa documentation](https://librosa.org/doc/latest/index.html)
-- [Streamlit](https://streamlit.io)
-- Scikit-learn, TensorFlow, PyTorch, and more!
+This project was developed by **Saad Yaqine** as part of a personal learning initiative to explore voice signal processing, ML pipelines, and real-time applications.
+
+📬 Contact: saadyaqine91@gmail.com  
+📌 Tools used: Python, Librosa, Scikit-learn, TensorFlow/Keras, Streamlit
+
 ---
+
+### 🔗 References
+
+- 🎧 [RAVDESS dataset](https://zenodo.org/record/1188976)
+- 📖 [Librosa documentation](https://librosa.org/doc/latest/index.html)
+- 🌐 [Streamlit](https://streamlit.io)
+- ⚙️ Scikit-learn, TensorFlow, PyTorch
+
 
 
