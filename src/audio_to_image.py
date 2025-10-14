@@ -35,3 +35,4 @@ def pad_spectrogram(img,target_width=143):
         left_pad=pad_width//2
         right_pad=pad_width-left_pad
         padded_img=np.pad(img,((0,0),(left_pad,right_pad),(0,0)),mode='constant',constant_values=0)
+        return padded_img
