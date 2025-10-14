@@ -37,6 +37,18 @@ Populate the `data/` directory locally before training or inference.
 
 ## 🚀 Quickstart
 
+### Prerequisites
+
+**For WSL2 / Linux users:**
+Install FFmpeg to enable audio format support (MP3, M4A, FLAC, etc.):
+
+```bash
+sudo apt update
+sudo apt install -y ffmpeg
+```
+
+**Python environment setup:**
+
 ```bash
 python3 -m venv .venv
 . .venv/bin/activate
@@ -107,8 +119,29 @@ Artifacts written to `models/`:
 streamlit run app.py
 ```
 
-- Select your microphone input (works best on native OS, not WSL).
-- Record a short snippet and the app will display the predicted emotion plus top‑3 probabilities.
+The app provides **two input methods**:
+
+#### 📁 Upload Audio Files
+- Upload pre-recorded audio files from your computer
+- **Supported formats**: WAV, MP3, M4A, FLAC, OGG
+- **Perfect for WSL2 users** where microphone access is limited
+- Preview the audio before analysis
+
+**How to record audio on Windows:**
+1. Open **Voice Recorder** app (Windows + S, search "Voice Recorder")
+2. Click the microphone button to start recording
+3. Speak naturally (expressing different emotions)
+4. Click stop when finished
+5. Find your recording in `C:\Users\YourName\Documents\Sound recordings\`
+6. Upload the file to the Streamlit app
+
+#### 🎤 Direct Recording
+- Record directly from your microphone (works best on native OS)
+- Adjust recording duration (1-10 seconds)
+- Select input device if multiple microphones are available
+- Instant emotion prediction after recording
+
+Both methods display the predicted emotion with top-3 probabilities.
 
 ### 4. CLI predictions
 
@@ -152,10 +185,25 @@ Per-class precision/recall and confusion matrix are logged in `models/training_m
 
 ## 📝 Notes & Roadmap
 
-- Data augmentation (noise, pitch/tempo shifts) for robustness.
-- Swap classifiers (XGBoost, LightGBM) or fine-tune end-to-end CNNs on mel-spectrograms.
-- Deploy Streamlit app to the cloud (Streamlit Community Cloud or Hugging Face Spaces).
-- Consider mixed-language datasets or emotion intensity regression.
+### Known Issues & Solutions
+
+**WSL2 Microphone Access:**
+- Direct microphone recording doesn't work on WSL2 due to audio device limitations
+- **Solution**: Use the file upload feature to analyze audio recorded on Windows
+- Alternative: Configure PulseAudio bridge between Windows and WSL2 (advanced)
+
+**Audio Format Support:**
+- Requires FFmpeg for MP3, M4A, FLAC, OGG formats
+- WAV files work without FFmpeg
+- Install with: `sudo apt install ffmpeg` (Linux/WSL2)
+
+### Future Improvements
+
+- Data augmentation (noise, pitch/tempo shifts) for robustness
+- Swap classifiers (XGBoost, LightGBM) or fine-tune end-to-end CNNs on mel-spectrograms
+- Deploy Streamlit app to the cloud (Streamlit Community Cloud or Hugging Face Spaces)
+- Consider mixed-language datasets or emotion intensity regression
+- Add real-time audio streaming for live emotion detection
 
 ---
 
