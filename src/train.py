@@ -4,6 +4,7 @@ import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from multiprocessing import Pool, cpu_count
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
@@ -24,7 +25,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.svm import SVC
 from tqdm import tqdm
 
-from src.feature_extraction import FeatureExtractor
+from src.feature_extraction import FeatureExtractor, extract_features
 
 
 PATH_CANDIDATES = ("file_path", "filepath", "path", "audio_path", "relative_path")
@@ -56,6 +57,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--skip-search", action="store_true", help="Skip hyperparameter search and use default settings.")
     parser.add_argument("--verbose", action="store_true", help="Increase verbosity during training.")
     parser.add_argument("--sample-limit", type=int, default=None, help="Optional cap on the number of samples to load.")
+    parser.add_argument(
+        "--feature-jobs",
+        type=int,
+        default=4,
+        help="Parallel threads for feature extraction (use 1 to disable threading).",
+    )
     return parser.parse_args()
 
 
@@ -86,6 +93,23 @@ def _resolve_audio_path(base: Path, relative_path: str) -> Path:
     return base / rel
 
 
+_POOL_FEATURE_NAMES: Optional[Sequence[str]] = None
+
+
+def _init_pool(feature_names: Sequence[str]) -> None:
+    global _POOL_FEATURE_NAMES
+    _POOL_FEATURE_NAMES = feature_names
+
+
+def _process_item_parallel(args: Tuple[str, str]):
+    file_path_str, label_value = args
+    feats = extract_features(file_path_str)
+    if feats is None or _POOL_FEATURE_NAMES is None:
+        return None
+    vector = np.array([feats[name] for name in _POOL_FEATURE_NAMES], dtype=np.float32)
+    return vector, label_value, Path(file_path_str)
+
+
 def _collect_features(
     metadata: pd.DataFrame,
     path_col: str,
@@ -93,6 +117,7 @@ def _collect_features(
     extractor: FeatureExtractor,
     audio_root: Path,
     sample_limit: Optional[int] = None,
+    feature_jobs: int = 4,
 ) -> Tuple[np.ndarray, np.ndarray, List[Path]]:
     features: List[np.ndarray] = []
     labels: List[str] = []
@@ -101,17 +126,55 @@ def _collect_features(
     iterator = metadata[[path_col, label_col]].itertuples(index=False, name=None)
     if sample_limit is not None:
         iterator = list(iterator)[:sample_limit]
+    else:
+        iterator = list(iterator)
 
-    total = sample_limit or len(metadata)
+    total = len(iterator)
+    if total == 0:
+        raise RuntimeError("Metadata CSV is empty. Nothing to extract.")
 
-    for path_value, label_value in tqdm(iterator, desc="Extracting features", total=total):
+    iterator_list: List[Tuple[str, str]] = []
+    for path_value, label_value in iterator:
         file_path = _resolve_audio_path(audio_root, path_value)
-        feature_vector = extractor.feature_vector(file_path)
-        if feature_vector is None:
+        iterator_list.append((str(file_path), label_value))
+
+    # Bootstrap: process first valid sample sequentially to establish feature ordering.
+    bootstrap_index = None
+    for idx, (path_str, label_value) in enumerate(iterator_list):
+        vector = extractor.feature_vector(path_str)
+        if vector is None:
             continue
-        features.append(feature_vector)
+        features.append(vector)
         labels.append(label_value)
-        used_paths.append(file_path)
+        used_paths.append(Path(path_str))
+        bootstrap_index = idx
+        break
+
+    if bootstrap_index is None:
+        raise RuntimeError("Failed to extract any features during bootstrap stage.")
+
+    remaining = iterator_list[:bootstrap_index] + iterator_list[bootstrap_index + 1 :]
+
+    if feature_jobs and feature_jobs != 1:
+        worker_count = cpu_count() if feature_jobs < 0 else feature_jobs
+        worker_count = max(1, worker_count)
+        with Pool(processes=worker_count, initializer=_init_pool, initargs=(extractor.feature_names,)) as pool:
+            for result in tqdm(pool.imap_unordered(_process_item_parallel, remaining), total=len(remaining)):
+                if result is None:
+                    continue
+                vector, label_value, file_path = result
+                features.append(vector)
+                labels.append(label_value)
+                used_paths.append(file_path)
+    else:
+        for path_str, label_value in tqdm(remaining, desc="Extracting features", total=len(remaining)):
+            feats = extractor.extract(path_str)
+            if feats is None:
+                continue
+            vector = np.array([feats[name] for name in extractor.feature_names], dtype=np.float32)
+            features.append(vector)
+            labels.append(label_value)
+            used_paths.append(Path(path_str))
 
     if not features:
         raise RuntimeError("No features were extracted. Check your paths and audio files.")
@@ -330,6 +393,7 @@ def main() -> None:
         extractor=extractor,
         audio_root=audio_root,
         sample_limit=args.sample_limit,
+        feature_jobs=args.feature_jobs,
     )
 
     label_encoder = LabelEncoder()

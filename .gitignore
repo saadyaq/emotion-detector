@@ -1,9 +1,31 @@
-venv/
+# Python cache
 __pycache__/
-.ipynb_checkpoints/
-*.pyc
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Editor / OS artifacts
 .DS_Store
-.env
-*.wav
-*.mp3
-data/raw/
+.idea/
+.vscode/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Local data dumps (keep metadata.csv committed)
+data/**
+!data/
+!data/metadata.csv
+
+# Model artifacts (keep trained models if explicitly tracked)
+models/*.tmp
+
+# Logs and misc
+*.log
+*.tmp
+.pytest_cache/
+coverage/
