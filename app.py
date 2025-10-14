@@ -82,6 +82,23 @@ def render_probabilities(probabilities: np.ndarray, label_encoder) -> None:
         st.write(f"- {labels[idx]} : {probabilities[idx]:.2%}")
 
 
+def process_audio(model, label_encoder, filepath: Path) -> None:
+    """Process audio file and display emotion prediction."""
+    feature_vector = EXTRACTOR.feature_vector(filepath)
+    if feature_vector is None:
+        st.error("Impossible d'extraire les features à partir de l'audio.")
+        return
+
+    feature_vector = feature_vector.reshape(1, -1)
+    if not validate_dimensions(model, feature_vector):
+        return
+
+    prediction_label, probabilities = predict_emotion(model, label_encoder, feature_vector)
+    st.subheader("🧠 Émotion détectée")
+    st.success(prediction_label)
+    render_probabilities(probabilities, label_encoder)
+
+
 def main() -> None:
     st.set_page_config(page_title="Détecteur d'Émotions Vocales", page_icon="🎙️")
     st.title("🎙️ Détecteur d'Émotions Vocales")
@@ -93,35 +110,55 @@ def main() -> None:
 
     st.caption(f"Modèle chargé : `{model_path}`")
 
-    duration = st.slider("Durée d'enregistrement (secondes)", 1, 10, 3)
-    fs = 22050
+    # Add tabs for different input methods
+    tab1, tab2 = st.tabs(["📁 Upload un fichier audio", "🎤 Enregistrer"])
 
-    device_index = choose_input_device()
-    if device_index == -1:
-        return
+    with tab1:
+        st.markdown("### Téléversez un fichier audio")
+        uploaded_file = st.file_uploader(
+            "Choisissez un fichier audio (WAV, MP3, M4A, etc.)",
+            type=["wav", "mp3", "m4a", "flac", "ogg"],
+            help="Formats supportés: WAV, MP3, M4A, FLAC, OGG"
+        )
 
-    if st.button("🎤 Enregistrer"):
-        st.info("Enregistrement en cours...")
-        sd.default.device = (device_index, None)
-        recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype="float32")
-        sd.wait()
-        filepath = Path("audio_input.wav")
-        write(filepath.as_posix(), fs, recording.squeeze())
-        st.success("Enregistrement terminé !")
+        if uploaded_file is not None:
+            st.audio(uploaded_file, format=f"audio/{uploaded_file.name.split('.')[-1]}")
 
-        feature_vector = EXTRACTOR.feature_vector(filepath)
-        if feature_vector is None:
-            st.error("Impossible d'extraire les features à partir de l'audio.")
+            if st.button("🔍 Analyser l'audio uploadé"):
+                with st.spinner("Analyse en cours..."):
+                    # Save uploaded file temporarily
+                    temp_filepath = Path(f"temp_upload_{uploaded_file.name}")
+                    with open(temp_filepath, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+
+                    # Process the audio
+                    process_audio(model, label_encoder, temp_filepath)
+
+                    # Clean up temp file
+                    if temp_filepath.exists():
+                        temp_filepath.unlink()
+
+    with tab2:
+        st.markdown("### Enregistrer depuis le microphone")
+
+        duration = st.slider("Durée d'enregistrement (secondes)", 1, 10, 3)
+        fs = 22050
+
+        device_index = choose_input_device()
+        if device_index == -1:
+            st.info("💡 **Astuce**: Si vous êtes sur WSL2, utilisez l'onglet 'Upload un fichier audio' pour analyser des fichiers enregistrés sur Windows.")
             return
 
-        feature_vector = feature_vector.reshape(1, -1)
-        if not validate_dimensions(model, feature_vector):
-            return
+        if st.button("🎤 Enregistrer"):
+            st.info("Enregistrement en cours...")
+            sd.default.device = (device_index, None)
+            recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype="float32")
+            sd.wait()
+            filepath = Path("audio_input.wav")
+            write(filepath.as_posix(), fs, recording.squeeze())
+            st.success("Enregistrement terminé !")
 
-        prediction_label, probabilities = predict_emotion(model, label_encoder, feature_vector)
-        st.subheader("🧠 Émotion détectée")
-        st.success(prediction_label)
-        render_probabilities(probabilities, label_encoder)
+            process_audio(model, label_encoder, filepath)
 
 
 if __name__ == "__main__":
